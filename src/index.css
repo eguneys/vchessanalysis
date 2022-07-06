@@ -1,0 +1,52 @@
+vchessana {
+  position: relative;
+  width: 100%;
+  display: flex;
+  overflow: hidden;
+}
+
+
+.vdrops-wrap {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  width: 100%;
+  flex-flow: column;
+  justify-content: stretch;
+  transform: translate(0, -1em);
+  transition: transform 0.3s;
+}
+
+.vdrops-wrap.open {
+  transform: translate(0);
+}
+
+.vdrops-wrap .vhead {
+  user-select: none;
+  cursor: pointer;
+  flex: 0 1em;
+}
+
+.vdrops-wrap vdrops {
+  flex: 8;
+}
+
+
+.vboard-wrap {
+  flex: calc(9);
+  position: relative;
+}
+
+
+.vfen-wrap {
+  display: flex;
+  flex-flow: column;
+  flex: calc(7);
+  position: relative;
+}
+
+
+vfens {
+  overflow: auto;
+  margin-bottom: 1em;
+}

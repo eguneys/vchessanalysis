@@ -1,0 +1,69 @@
+.vfen-wrap {
+
+  background: #ffd580;
+}
+
+
+.vdrops-wrap {
+  background: #efc560;
+}
+
+
+square.light {
+  background: lightyellow;
+}
+
+square.dark {
+  background: darkcyan;
+}
+
+squares square {
+  border-radius: 1px;
+}
+
+files, ranks {
+  z-index: 1;
+}
+
+files file {
+  text-align: left;
+}
+
+ranks rank {
+  align-items: flex-start;
+}
+
+files file:nth-child(even),
+ranks rank:nth-child(even) {
+  color: darkcyan;
+}
+
+files file:nth-child(odd),
+ranks rank:nth-child(odd) {
+  color: lightyellow;
+}
+
+vchessreplay {
+}
+
+
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: rgba(20, 20, 0, 0.1);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: lightyellow;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

@@ -1,0 +1,37 @@
+
+vchessreplay {
+  user-select: none;
+  background: orange;
+}
+
+lines {
+  display: block;
+  background: orange;
+}
+
+moves move.hi {
+  background: #f0e724;
+  color: orange;
+  border-radius: 1px;
+}
+
+moves move index {
+  padding-right: 0.1em;
+  line-height: 111.11%;
+  font-size: 90%;
+  color: #5c4033;
+}
+
+moves move {
+  padding: 0.15em 0.1em;
+  display: inline-block;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #f0e724;
+}
+
+moves comment {
+  font-size: 0.9em;
+  word-wrap: break-word;
+  color: #f0f0cf;
+}
