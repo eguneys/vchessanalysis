@@ -1,5 +1,6 @@
 import '../assets/vchessboard.css'
 import '../assets/vchessreplay.css'
+import './drops.css'
 import './replay.css'
 import './index.css'
 import './theme.css'

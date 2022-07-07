@@ -1,0 +1,10 @@
+pieces {
+  display: flex;
+  gap: 0.2em;
+}
+
+
+pieces piece {
+  flex: 1;
+  aspect-ratio: 1/1;
+}

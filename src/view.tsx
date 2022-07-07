@@ -1,4 +1,4 @@
-import { onMount } from 'solid-js'
+import { on, onMount, createEffect } from 'solid-js'
 import VChessboard from 'vchessboard'
 import VChessreplay from 'vchessreplay'
 
@@ -27,14 +27,14 @@ const App = analysis => (props) => {
 
   return (<vchessana>
       <VBoard/>
-      <VFens drops={analysis.drops}/>
+      <VFens drops={analysis.drops} fens={analysis.fens}/>
       </vchessana>)
 }
 
 const VFens = props => {
   return (<div class='vfen-wrap'>
       <vfens>
-        <For each={[1,2,3]}>{ fen =>
+        <For each={props.fens.fens}>{ fen =>
           <VFen fen={fen}/>
         }</For>
       </vfens>
@@ -45,19 +45,36 @@ const VFens = props => {
 const VFen = props => {
 
   return (<vfen>
-   <fen>"FENFENFENFENFENFENEFE"</fen> 
-   <VReplay/>
+   <fen onMouseOver={props.fen.hover_fen}>{props.fen.fen}</fen> 
+   <VReplay moves={props.fen.moves} on_hover_off={props.fen.on_hover_off}/>
       </vfen>)
 }
 
 const VDrops = props => {
 
-  return (<div class={props.drops.klass}>
-    <div class='vhead' onClick={props.drops.toggle_head} >
-      <span>Drops</span>
-    </div>
-    <vdrops>
+  return (<div class='vdrops-wrap'>
+      
+      <vdrops class={props.drops.klass}>
+    <div>
+      <label>Preset:</label>
+      <select ref={_ => setTimeout(() => props.drops.$preset = _)}>
+       <option>startpos</option>
+       <option>empty</option>
+      </select>
+      </div>
+
+
+      <pieces>
+      <For each={props.drops.pieces}>{piece =>
+        <piece class={piece.klass}/>
+      }</For>
+      </pieces>
     </vdrops>
+    <div class='vhead' onClick={props.drops.toggle_head} >
+      <span>{props.drops.mode}</span>
+      </div>
+
+
       </div>)
 }
 
@@ -66,7 +83,10 @@ const VReplay = props => {
 
   onMount(() => {
     let api = VChessreplay($ref, {})
-    
+    //api.moves = props.moves
+    createEffect(on(props.on_hover_off, () => {
+      api.hover_off()
+          }))
     })
 
   return (<div ref={$ref} class='vreplay-wrap'></div>)
