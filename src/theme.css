@@ -22,6 +22,11 @@ square.dark {
   background: darkcyan;
 }
 
+square.highlight {
+  background: yellow;
+  opacity: 0.5;
+}
+
 squares square {
   border-radius: 1px;
 }

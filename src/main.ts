@@ -12,7 +12,7 @@ import { Analysis } from './analysis'
 
 export default function VChessAnalysis(element: HTMLElement, options = {}) {
 
-  let analysis = new Analysis()
+  let analysis = new Analysis(element)
   render(App(analysis), element)
 
   return {

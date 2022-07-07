@@ -67,3 +67,18 @@ vdrops pieces {
 vdrops pieces piece {
   cursor: pointer;
 }
+
+
+.drag-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+
+.drag-overlay piece {
+  position: absolute;
+  width: 6%;
+  aspect-ratio: 1/1;
+  z-index: 11;
+}

@@ -1,23 +1,116 @@
-import { createSignal, createMemo, mapArray } from 'solid-js'
+import { untrack, on, createEffect, createSignal, createMemo, mapArray } from 'solid-js'
 import { read, write, owrite } from './play'
+import { make_drag, make_ref } from './make_sticky'
+import { make_position } from './make_util'
+import { Vec2 } from 'soli2d'
 
 
 const colors = ['white', 'black']
 const roles = ['pawn', 'rook', 'queen', 'bishop', 'knight', 'king']
 const pieces = colors.flatMap(color => roles.map(role => [color, role].join(' ')))
 
+const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+const ranks = ['1', '2', '3', '4', '5', '6', '7', '8']
+
+const vs_chess_pos = (vs: Vec2) => {
+  return files[vs.x] + ranks[7-vs.y]
+}
+
+
+function make_hooks(analysis: Analysis) {
+  return { 
+    on_hover() {
+    },
+    on_up(decay) {
+    },
+    on_click() {
+    },
+    find_inject_drag() {
+    },
+    on_drag_update(decay) {
+      let key = analysis.board.get_key_at_abs_pos(decay.target.vs)
+      if (key) {
+        analysis.board.highlight = key
+      }
+    },
+    find_on_drag_start(drag) {
+      return analysis.drops.find_on_drag_start(drag.move)
+    }
+  }
+}
 
 export class Analysis {
 
-
-  constructor() {
-  
-
-    this.fens = make_fens(this)
-
-    this.drops = make_drops(this)
+  onScroll() {
+    this.refs.forEach(_ => _.$clear_bounds())
   }
 
+  get drag_piece() {
+    return this.drops.drag_piece.cur
+  }
+
+  constructor(readonly $element: HTMLElement) {
+  
+    this.refs = []
+    this.drag = make_drag(make_hooks(this), $element)
+    this.refs.push(this.drag)
+    this.fens = make_fens(this)
+    this.drops = make_drops(this)
+    this.board = make_board(this)
+
+    createEffect(on(() => this.drag.decay, (decay, prev) => {
+      if (!decay) {
+        if (prev) {
+          let key = this.board.get_key_at_abs_pos(prev.target.vs)
+          this.board.highlight = undefined
+          this.drops.drag_piece.drop()
+        }
+        this.drops.pieces.forEach(_ => _.mouse_down = false)
+      }
+    }))
+
+
+  }
+
+}
+
+
+
+const make_board = (analysis: Analysis) => {
+
+  let ref = make_ref()
+
+  let _hi = createSignal()
+
+
+  let _pieses = createSignal([])
+
+  analysis.refs.push(ref)
+  return {
+    get pieses() {
+      return read(_pieses)
+    },
+    set pieses(pieses: Array<Piese>) {
+      owrite(_pieses, pieses)
+    },
+    ref,
+    get_key_at_abs_pos(vs: Vec2) {
+      let res = ref.get_normal_at_abs_pos(vs)
+      if (res.x < 1 && res.x > 0 && res.y < 1 && res.y > 0) {
+        return Vec2.make(Math.floor(res.x * 8), Math.floor(res.y * 8))
+      }
+    },
+    set highlight(vs: Vec2 | undefined) {
+      if (vs) {
+        owrite(_hi, vs_chess_pos(vs))
+      } else {
+        owrite(_hi, undefined)
+      }
+    },
+    get highlight() {
+      return read(_hi)
+    }
+  }
 }
 
 
@@ -56,9 +149,67 @@ const make_fens = (analysis: Analysis) => {
 }
 
 const make_piece = (analysis: Analysis, piece: string) => {
+
+  let ref = make_ref()
+  analysis.refs.push(ref)
+
+  let _mouse_down = false
   return {
+    set mouse_down(v: boolean) {
+      _mouse_down = v
+    },
+    get mouse_down() {
+      return _mouse_down
+    },
+    set $ref($ref: HTMLElement) {
+      ref.$ref = $ref
+    },
+    piece,
     get klass() {
       return piece
+    }
+  }
+}
+
+const make_drag_piece = (analysis: Analysis) => {
+
+  let _dragging = createSignal(false)
+  let _piece = createSignal('')
+  let pos = make_position(0, 0)
+
+  let m_style = createMemo(() => ({
+    transform: `translate(calc(${pos.x}px - 50%), calc(${pos.y}px - 50%))`
+  }))
+
+  let m_klass = createMemo(() => [
+    ...read(_piece).split(' ')
+  ].join(' '))
+
+  return {
+    get cur() {
+      if (read(_dragging)) {
+        return this
+      }
+    },
+    drop() {
+      owrite(_dragging, false)
+    },
+    get vs() {
+      return pos.vs
+    },
+    lerp_vs(vec: Vec2) {
+      pos.lerp_vs(vec)
+    },
+    begin(piece: string, vs: Vec2) {
+      owrite(_dragging, true)
+      pos.vs = Vec2.make(...vs)
+      owrite(_piece, piece)
+    },
+    get klass() {
+      return m_klass()
+    },
+    get style() {
+      return m_style()
     }
   }
 }
@@ -84,8 +235,18 @@ const make_drops = (analysis: Analysis) => {
 
   const m_pieces = _pieces.map(_ => make_piece(analysis, _))
 
+  const drag_piece = make_drag_piece(analysis)
+
 
   return {
+    drag_piece,
+    find_on_drag_start(vs: Vec2) {
+      let piece = m_pieces.find(_ => _.mouse_down)
+      if (piece) {
+        drag_piece.begin(piece.piece, vs)
+        return drag_piece
+      }
+    },
     get mode() {
       return m_mode()
     },

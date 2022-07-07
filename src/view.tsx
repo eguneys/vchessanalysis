@@ -1,4 +1,4 @@
-import { on, onMount, createEffect } from 'solid-js'
+import { onCleanup, on, onMount, createEffect } from 'solid-js'
 import VChessboard from 'vchessboard'
 import VChessreplay from 'vchessreplay'
 
@@ -23,10 +23,34 @@ const light_squares = [
 'h1', 'h3', 'h5', 'h7']
 
 
+function unbindable(
+  el: EventTarget,
+  eventName: string,
+  callback: EventListener,
+  options?: AddEventListenerOptions
+): Unbind {
+  el.addEventListener(eventName, callback, options);
+  return () => el.removeEventListener(eventName, callback, options);
+}
+
 const App = analysis => (props) => {
 
+  let unbinds = [];
+
+  unbinds.push(unbindable(document, 'scroll', () => analysis.onScroll(), { capture: true, passive: true }));
+  unbinds.push(unbindable(window, 'resize', () => analysis.onScroll(), { passive: true }));
+
+  onCleanup(() => unbinds.forEach(_ => _()));
+
+
+
   return (<vchessana>
-      <VBoard/>
+      <div class='drag-overlay'>
+      <Show when={analysis.drag_piece}>{ piece =>
+      <piece class={piece.klass} style={piece.style}/>
+      }</Show>
+      </div>
+      <VBoard board={analysis.board}/>
       <VFens drops={analysis.drops} fens={analysis.fens}/>
       </vchessana>)
 }
@@ -66,7 +90,7 @@ const VDrops = props => {
 
       <pieces>
       <For each={props.drops.pieces}>{piece =>
-        <piece class={piece.klass}/>
+        <piece ref={_ => setTimeout(() => piece.$ref = _)} onMouseDown={_ => piece.mouse_down = true} class={piece.klass}/>
       }</For>
       </pieces>
     </vdrops>
@@ -101,7 +125,21 @@ const VBoard = props => {
       let api = VChessboard($ref, {})
       let darks = dark_squares.map(_ => `dark@${_}`)
       let lights = light_squares.map(_ => `light@${_}`)
-      api.squares = [...darks, ...lights]
+      let bases = [...darks, ...lights]
+ 
+       
+      createEffect(() => {
+          let { highlight } = props.board
+
+          let res = []
+          if (highlight) {
+            res.push(`highlight@${highlight}`)
+          }
+          api.squares = [...bases, ...res]
+          })
+
+      props.board.ref.$ref = $ref
+
    })
 
   return (<div ref={$ref} class='vboard-wrap'></div>)
