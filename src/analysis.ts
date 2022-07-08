@@ -16,6 +16,13 @@ const vs_chess_pos = (vs: Vec2) => {
   return files[vs.x] + ranks[7-vs.y]
 }
 
+const vs_key_piece_data = (vs: Vec2, piece: string) => {
+  let at = vs_chess_pos(vs)
+  let wr = piece.split(' ').map(_ => _[0]).join('')
+
+  return [wr, at].join('@')
+}
+
 
 function make_hooks(analysis: Analysis) {
   return { 
@@ -49,7 +56,11 @@ export class Analysis {
     return this.drops.drag_piece.cur
   }
 
-  constructor(readonly $element: HTMLElement) {
+  set pieses(pieses: Pieses) {
+    this.board.pieses = pieses
+  }
+
+  constructor(hooks: UserHooks, readonly $element: HTMLElement) {
   
     this.refs = []
     this.drag = make_drag(make_hooks(this), $element)
@@ -62,8 +73,10 @@ export class Analysis {
       if (!decay) {
         if (prev) {
           let key = this.board.get_key_at_abs_pos(prev.target.vs)
+          let { piece } = prev.target
           this.board.highlight = undefined
           this.drops.drag_piece.drop()
+          hooks.on_user_drop(vs_key_piece_data(key, piece))
         }
         this.drops.pieces.forEach(_ => _.mouse_down = false)
       }
@@ -199,6 +212,9 @@ const make_drag_piece = (analysis: Analysis) => {
     },
     lerp_vs(vec: Vec2) {
       pos.lerp_vs(vec)
+    },
+    get piece() {
+      return read(_piece)
     },
     begin(piece: string, vs: Vec2) {
       owrite(_dragging, true)

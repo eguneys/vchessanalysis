@@ -127,6 +127,9 @@ const VBoard = props => {
       let lights = light_squares.map(_ => `light@${_}`)
       let bases = [...darks, ...lights]
  
+      createEffect(() => {
+          api.pieses = props.board.pieses
+          })
        
       createEffect(() => {
           let { highlight } = props.board
