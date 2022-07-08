@@ -14,7 +14,7 @@ vdrops {
 }
 
 vdrops.open {
-  transform: translate(0, calc(-100%));
+  transform: translate(0, calc(-100% - 0.2em));
 }
 
 .vdrops-wrap .vhead {
@@ -81,4 +81,23 @@ vdrops pieces piece {
   width: 6%;
   aspect-ratio: 1/1;
   z-index: 11;
+}
+
+.vhead .mode {
+  padding: 0.1em 0.4em;
+  text-transform: uppercase;
+}
+
+.vhead .mode.fen {
+  background: green;
+}
+
+.vhead .mode.move {
+  background: #888;
+}
+
+vdrops .control-sets {
+  padding: 0.2em;
+  display: flex;
+  gap: 1em;
 }

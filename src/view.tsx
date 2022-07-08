@@ -22,7 +22,6 @@ const light_squares = [
 'g2', 'g4', 'g6', 'g8',
 'h1', 'h3', 'h5', 'h7']
 
-
 function unbindable(
   el: EventTarget,
   eventName: string,
@@ -79,14 +78,23 @@ const VDrops = props => {
   return (<div class='vdrops-wrap'>
       
       <vdrops class={props.drops.klass}>
+      <div class="control-sets">
     <div>
-      <label>Preset:</label>
       <select ref={_ => setTimeout(() => props.drops.$preset = _)}>
+       <option selected disabled>Preset</option>
        <option>startpos</option>
        <option>empty</option>
       </select>
       </div>
 
+      <div>
+      <select ref={_ => setTimeout(() => props.drops.$preset = _)}>
+       <option selected disabled>Orientation</option>
+       <option>white</option>
+       <option>black</option>
+      </select>
+      </div>
+      </div>
 
       <pieces>
       <For each={props.drops.pieces}>{piece =>
@@ -95,7 +103,7 @@ const VDrops = props => {
       </pieces>
     </vdrops>
     <div class='vhead' onClick={props.drops.toggle_head} >
-      <span>{props.drops.mode}</span>
+      <span class={['mode', props.drops.mode].join(' ')}>{props.drops.mode}</span>
       </div>
 
 

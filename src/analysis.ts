@@ -75,12 +75,14 @@ export class Analysis {
       if (!decay) {
         if (prev) {
           let key = this.board.get_key_at_abs_pos(prev.target.vs)
-          let { piece } = prev.target
           this.board.highlight = undefined
-          this.drops.drag_piece.drop()
-          let immediate_drop = vs_key_piece_data(key, piece)
-          this.board.immediate_drop= immediate_drop
-          hooks.on_user_drop(immediate_drop)
+            this.drops.drag_piece.drop()
+          if (key) {
+            let { piece } = prev.target
+            let immediate_drop = vs_key_piece_data(key, piece)
+            this.board.immediate_drop= immediate_drop
+            hooks.on_user_drop(immediate_drop)
+          }
         }
         this.drops.pieces.forEach(_ => _.mouse_down = false)
       }
@@ -239,13 +241,12 @@ const make_drag_piece = (analysis: Analysis) => {
   }
 }
 
-const modes = ['', 'Move', 'Fen']
 const make_drops = (analysis: Analysis) => {
   
-  const _mode = createSignal(1)
+  const _mode = createSignal('fen')
 
   const m_is_open = createMemo(() => {
-    return read(_mode) === 2
+    return read(_mode) === 'fen'
   })
   
   const m_head_klass = createMemo(() => [
@@ -253,7 +254,7 @@ const make_drops = (analysis: Analysis) => {
   ].join(' '))
 
   const m_mode = createMemo(() => {
-    return modes[read(_mode)]
+    return read(_mode)
   })
 
   const _pieces = pieces
@@ -276,7 +277,7 @@ const make_drops = (analysis: Analysis) => {
       return m_mode()
     },
     toggle_head() {
-      owrite(_mode, _ => _ === 1 ? 2 : 1)
+      owrite(_mode, _ => _ === 'fen' ? 'move' : 'fen')
     },
     get klass() {
       return m_head_klass()
