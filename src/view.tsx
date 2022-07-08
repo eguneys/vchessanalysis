@@ -23,8 +23,9 @@ const light_squares = [
 'h1', 'h3', 'h5', 'h7']
 
 
-const orientations = ['', 'white', 'black']
-const presets = ['', 'startpos', 'empty']
+const orientations = { 'w': 'white', 'b': 'black' }
+const i_orientations = ['', 'white', 'black']
+const i_presets = ['', 'startpos', 'empty']
 
 function unbindable(
   el: EventTarget,
@@ -49,7 +50,7 @@ const App = analysis => (props) => {
 
   return (<vchessana>
       <div class='drag-overlay'>
-      <Show when={analysis.drag_piece}>{ piece =>
+      <Show when={analysis.cur_drag_piece}>{ piece =>
       <piece class={piece.klass} style={piece.style}/>
       }</Show>
       </div>
@@ -85,7 +86,7 @@ const VDrops = props => {
       <vdrops class={props.drops.klass}>
       <div class="control-sets">
     <div>
-      <select onChange={_ => props.drops.preset = presets[_.target.selectedIndex]}>
+      <select onChange={_ => props.drops.preset = i_presets[_.target.selectedIndex]}>
        <option selected disabled>Preset</option>
        <option>startpos</option>
        <option>empty</option>
@@ -93,7 +94,7 @@ const VDrops = props => {
       </div>
 
       <div>
-      <select onChange={_ => props.drops.orientation = orientations[_.target.selectedIndex]}>
+      <select onChange={_ => props.drops.orientation = i_orientations[_.target.selectedIndex]}>
        <option selected disabled>Orientation</option>
        <option>white</option>
        <option>black</option>
@@ -161,7 +162,7 @@ const VBoard = props => {
 
    })
 
-  return (<div ref={$ref} class='vboard-wrap'></div>)
+  return (<div ref={$ref} class={['vboard-wrap', orientations[props.board.orientation]].join(' ')}></div>)
 }
 
 

@@ -43,13 +43,18 @@ ranks rank {
   align-items: flex-start;
 }
 
-files file:nth-child(even),
-ranks rank:nth-child(even) {
+
+.black files file:nth-child(odd),
+.black ranks rank:nth-child(odd),
+.white files file:nth-child(even),
+.white ranks rank:nth-child(even) {
   color: darkcyan;
 }
 
-files file:nth-child(odd),
-ranks rank:nth-child(odd) {
+.black files file:nth-child(even),
+.black ranks rank:nth-child(even),
+.white files file:nth-child(odd),
+.white ranks rank:nth-child(odd) {
   color: lightyellow;
 }
 

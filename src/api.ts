@@ -9,8 +9,11 @@ let _board = createSignal(Board.from_pieses([]), { equals: false})
 
 export function make_hooks() {
   return {
-    on_user_drop(piese: string) {
+    on_user_in(piese: string) {
       write(_board, _ => _.in(piese))
+    },
+    on_user_out(piese: string) {
+      write(_board, _ => _.out(piese))
     }
   }
 }

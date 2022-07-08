@@ -9,12 +9,18 @@ const colors = ['white', 'black']
 const roles = ['pawn', 'rook', 'queen', 'bishop', 'knight', 'king']
 const pieces = colors.flatMap(color => roles.map(role => [color, role].join(' ')))
 const short_roles = { 'pawn': 'p', 'rook': 'r', 'queen': 'q', 'bishop': 'b', 'knight': 'n', 'king': 'k' }
+const long_roles = { 'p': 'pawn', 'r': 'rook', 'q': 'queen', 'b': 'bishop', 'n': 'knight', 'k': 'king'}
+const long_colors = { 'w': 'white', 'b': 'black' }
 
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 const ranks = ['1', '2', '3', '4', '5', '6', '7', '8']
 
+const piese_at = (piese: Piese, at: Pos) => {
+  return !!piese.split('@')[1].match(at)
+}
+
 const vs_chess_pos = (vs: Vec2) => {
-  return files[vs.x] + ranks[7-vs.y]
+  return files[vs.x] + ranks[vs.y]
 }
 
 const vs_key_piece_data = (vs: Vec2, piece: string) => {
@@ -32,7 +38,13 @@ function make_hooks(analysis: Analysis) {
     },
     on_up(decay) {
     },
-    on_click() {
+    on_click(click: Vec2) {
+      let key = analysis.board.get_key_at_abs_pos(Vec2.make(...click))
+      if (key) {
+        key = vs_chess_pos(key)
+
+        analysis.hooks.on_user_out(key)
+      }
     },
     find_inject_drag() {
     },
@@ -43,7 +55,18 @@ function make_hooks(analysis: Analysis) {
       }
     },
     find_on_drag_start(drag) {
-      return analysis.drops.find_on_drag_start(drag.move)
+      let vs = Vec2.make(...drag.move)
+      let _piece = analysis.drops.find_on_drag_start(vs) || 
+        analysis.board.find_on_drag_start(vs)
+      if (_piece) {
+        let [piece, at] = _piece.split('@')
+        if (at) {
+          piece = [long_colors[piece[0]], long_roles[piece[1]]].join(' ')
+        }
+
+          analysis.drag_piece.begin(piece, vs)
+        return analysis.drag_piece
+      }
     }
   }
 }
@@ -54,15 +77,15 @@ export class Analysis {
     this.refs.forEach(_ => _.$clear_bounds())
   }
 
-  get drag_piece() {
-    return this.drops.drag_piece.cur
+  get cur_drag_piece() {
+    return this.drag_piece.cur
   }
 
   set pieses(pieses: Pieses) {
     this.board.pieses = pieses
   }
 
-  constructor(hooks: UserHooks, readonly $element: HTMLElement) {
+  constructor(readonly hooks: UserHooks, readonly $element: HTMLElement) {
   
     this.refs = []
     this.drag = make_drag(make_hooks(this), $element)
@@ -70,18 +93,19 @@ export class Analysis {
     this.fens = make_fens(this)
     this.drops = make_drops(this)
     this.board = make_board(this)
+    this.drag_piece = make_drag_piece(this)
 
     createEffect(on(() => this.drag.decay, (decay, prev) => {
       if (!decay) {
         if (prev) {
           let key = this.board.get_key_at_abs_pos(prev.target.vs)
           this.board.highlight = undefined
-            this.drops.drag_piece.drop()
+            this.drag_piece.drop()
           if (key) {
             let { piece } = prev.target
             let immediate_drop = vs_key_piece_data(key, piece)
             this.board.immediate_drop= immediate_drop
-            hooks.on_user_drop(immediate_drop)
+            hooks.on_user_in(immediate_drop)
           }
         }
         this.drops.pieces.forEach(_ => _.mouse_down = false)
@@ -107,6 +131,12 @@ const make_board = (analysis: Analysis) => {
 
   analysis.refs.push(ref)
   return {
+    find_on_drag_start(vs: Vec2) {
+      let pos = vs_chess_pos(this.get_key_at_abs_pos(vs))
+      if (pos) {
+        return read(_pieses).find(_ => piese_at(_, pos))
+      }
+    },
     get orientation() {
       return read(_orientation)
     },
@@ -130,7 +160,7 @@ const make_board = (analysis: Analysis) => {
       if (res.x < 1 && res.x > 0 && res.y < 1 && res.y > 0) {
         let _res = Vec2.make(Math.floor(res.x * 8), Math.floor(res.y * 8))
 
-        if (analysis.board.orientation === 'b') {
+        if (analysis.board.orientation === 'w') {
           _res.y = 7 - _res.y
         }
 
@@ -242,7 +272,7 @@ const make_drag_piece = (analysis: Analysis) => {
     },
     begin(piece: string, vs: Vec2) {
       owrite(_dragging, true)
-      pos.vs = Vec2.make(...vs)
+      pos.vs = vs
       owrite(_piece, piece)
     },
     get klass() {
@@ -274,23 +304,18 @@ const make_drops = (analysis: Analysis) => {
 
   const m_pieces = _pieces.map(_ => make_piece(analysis, _))
 
-  const drag_piece = make_drag_piece(analysis)
-
 
   return {
     set orientation(orientation: Color) {
+      //analysis.hooks.on_orientation(orientation)
+
       analysis.board.orientation = orientation[0]
     },
     set preset(preset: Preset) {
-      console.log(preset)
+      //analysis.hooks.on_preset(preset)
     },
-    drag_piece,
     find_on_drag_start(vs: Vec2) {
-      let piece = m_pieces.find(_ => _.mouse_down)
-      if (piece) {
-        drag_piece.begin(piece.piece, vs)
-        return drag_piece
-      }
+      return m_pieces.find(_ => _.mouse_down)?.piece
     },
     get mode() {
       return m_mode()
