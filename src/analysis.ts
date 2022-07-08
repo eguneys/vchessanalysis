@@ -102,10 +102,17 @@ const make_board = (analysis: Analysis) => {
   let _hi = createSignal()
 
 
+  let _orientation = createSignal('w')
   let _pieses = createSignal([])
 
   analysis.refs.push(ref)
   return {
+    get orientation() {
+      return read(_orientation)
+    },
+    set orientation(color: Color) {
+      owrite(_orientation, color)
+    },
     get pieses() {
       return read(_pieses)
     },
@@ -121,7 +128,13 @@ const make_board = (analysis: Analysis) => {
     get_key_at_abs_pos(vs: Vec2) {
       let res = ref.get_normal_at_abs_pos(vs)
       if (res.x < 1 && res.x > 0 && res.y < 1 && res.y > 0) {
-        return Vec2.make(Math.floor(res.x * 8), Math.floor(res.y * 8))
+        let _res = Vec2.make(Math.floor(res.x * 8), Math.floor(res.y * 8))
+
+        if (analysis.board.orientation === 'b') {
+          _res.y = 7 - _res.y
+        }
+
+        return _res
       }
     },
     set highlight(vs: Vec2 | undefined) {
@@ -265,6 +278,12 @@ const make_drops = (analysis: Analysis) => {
 
 
   return {
+    set orientation(orientation: Color) {
+      analysis.board.orientation = orientation[0]
+    },
+    set preset(preset: Preset) {
+      console.log(preset)
+    },
     drag_piece,
     find_on_drag_start(vs: Vec2) {
       let piece = m_pieces.find(_ => _.mouse_down)

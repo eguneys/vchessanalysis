@@ -22,6 +22,10 @@ const light_squares = [
 'g2', 'g4', 'g6', 'g8',
 'h1', 'h3', 'h5', 'h7']
 
+
+const orientations = ['', 'white', 'black']
+const presets = ['', 'startpos', 'empty']
+
 function unbindable(
   el: EventTarget,
   eventName: string,
@@ -75,12 +79,13 @@ const VFen = props => {
 
 const VDrops = props => {
 
+
   return (<div class='vdrops-wrap'>
       
       <vdrops class={props.drops.klass}>
       <div class="control-sets">
     <div>
-      <select ref={_ => setTimeout(() => props.drops.$preset = _)}>
+      <select onChange={_ => props.drops.preset = presets[_.target.selectedIndex]}>
        <option selected disabled>Preset</option>
        <option>startpos</option>
        <option>empty</option>
@@ -88,7 +93,7 @@ const VDrops = props => {
       </div>
 
       <div>
-      <select ref={_ => setTimeout(() => props.drops.$preset = _)}>
+      <select onChange={_ => props.drops.orientation = orientations[_.target.selectedIndex]}>
        <option selected disabled>Orientation</option>
        <option>white</option>
        <option>black</option>
@@ -137,6 +142,9 @@ const VBoard = props => {
  
       createEffect(() => {
           api.pieses = props.board.pieses
+          })
+      createEffect(() => {
+          api.orientation = props.board.orientation
           })
        
       createEffect(() => {
