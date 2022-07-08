@@ -8,6 +8,7 @@ import { Vec2 } from 'soli2d'
 const colors = ['white', 'black']
 const roles = ['pawn', 'rook', 'queen', 'bishop', 'knight', 'king']
 const pieces = colors.flatMap(color => roles.map(role => [color, role].join(' ')))
+const short_roles = { 'pawn': 'p', 'rook': 'r', 'queen': 'q', 'bishop': 'b', 'knight': 'n', 'king': 'k' }
 
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 const ranks = ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -18,7 +19,8 @@ const vs_chess_pos = (vs: Vec2) => {
 
 const vs_key_piece_data = (vs: Vec2, piece: string) => {
   let at = vs_chess_pos(vs)
-  let wr = piece.split(' ').map(_ => _[0]).join('')
+  let [w, r] = piece.split(' ')
+  let wr = w[0] + short_roles[r]
 
   return [wr, at].join('@')
 }
@@ -76,7 +78,9 @@ export class Analysis {
           let { piece } = prev.target
           this.board.highlight = undefined
           this.drops.drag_piece.drop()
-          hooks.on_user_drop(vs_key_piece_data(key, piece))
+          let immediate_drop = vs_key_piece_data(key, piece)
+          this.board.immediate_drop= immediate_drop
+          hooks.on_user_drop(immediate_drop)
         }
         this.drops.pieces.forEach(_ => _.mouse_down = false)
       }
@@ -104,6 +108,11 @@ const make_board = (analysis: Analysis) => {
       return read(_pieses)
     },
     set pieses(pieses: Array<Piese>) {
+      let i_immediate_piese = pieses.findIndex(_ => _ === this.immediate_drop)
+      if (i_immediate_piese > -1) {
+        pieses[i_immediate_piese] = this.immediate_drop + '~'
+        this.immediate_drop = undefined
+      }
       owrite(_pieses, pieses)
     },
     ref,
