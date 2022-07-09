@@ -66,6 +66,9 @@ function make_hooks(analysis: Analysis) {
       let _piece = analysis.drops.find_on_drag_start(vs) || 
         analysis.board.find_on_drag_start(vs)
       if (_piece) {
+        if (analysis.drops.mode === 'move') {
+          analysis.hooks.on_user_out(_piece)
+        }
         analysis.drag_piece.begin(_piece, vs)
         return analysis.drag_piece
       }
@@ -110,7 +113,7 @@ export class Analysis {
           if (key) {
             let { piece } = prev.target
             let immediate_drop = vs_key_piece_data(key, piece)
-            this.board.immediate_drop= immediate_drop
+            this.board.immediate_drop = [immediate_drop, prev.target.vs]
             hooks.on_user_in(immediate_drop)
           }
         }
@@ -134,9 +137,29 @@ const make_board = (analysis: Analysis) => {
 
   let _orientation = createSignal('w')
   let _pieses = createSignal([])
+  let _instant_track = createSignal()
+
+  createEffect(() => {
+    read(_pieses)
+    owrite(_instant_track, undefined)
+
+  })
 
   analysis.refs.push(ref)
   return {
+    get instant_track() {
+      return read(_instant_track)
+    },
+    set immediate_drop(drop: IDrop) {
+      let [idrop, vs] = drop
+      let _v_pos = ref.get_normal_at_abs_pos(vs).scale(8).sub(Vec2.make(0.5, 0.5))
+
+      let v_pos = _v_pos.vs.join('-')
+      let at = idrop.split('@')[1]
+      let res = [at, v_pos].join('@')
+
+      owrite(_instant_track, res)
+    },
     find_on_drag_start(vs: Vec2) {
       let key = this.get_key_at_abs_pos(vs)
       if (key) {
@@ -156,11 +179,6 @@ const make_board = (analysis: Analysis) => {
       return read(_pieses)
     },
     set pieses(pieses: Array<Piese>) {
-      let i_immediate_piese = pieses.findIndex(_ => _ === this.immediate_drop)
-      if (i_immediate_piese > -1) {
-        pieses[i_immediate_piese] = this.immediate_drop + '~'
-        this.immediate_drop = undefined
-      }
       owrite(_pieses, pieses)
     },
     ref,

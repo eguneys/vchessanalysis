@@ -140,6 +140,10 @@ const VBoard = props => {
       let darks = dark_squares.map(_ => `dark@${_}`)
       let lights = light_squares.map(_ => `light@${_}`)
       let bases = [...darks, ...lights]
+
+      createEffect(() => {
+          api.instant_track = props.board.instant_track
+          })
  
       createEffect(() => {
           api.pieses = props.board.pieses

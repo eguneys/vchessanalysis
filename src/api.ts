@@ -21,8 +21,10 @@ export function make_hooks() {
     on_user_in(piese: string) {
       write(_board, _ => _.in(piese))
     },
-    on_user_out(piese: string) {
-      write(_board, _ => _.out(piese))
+    on_user_out(_piese: string) {
+      let _ = _piese.split('@')
+      let pos = _[_.length - 1]
+      write(_board, _ => _.out(pos))
     },
     on_orientation(orientation: string) {
       write(_analysis, _ => _.orientation = orientation)
