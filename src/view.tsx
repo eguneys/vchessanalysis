@@ -153,18 +153,14 @@ const VBoard = props => {
           })
        
       createEffect(() => {
-          let { highlight } = props.board
+          let { squares } = props.board
 
-          let res = []
-          if (highlight) {
-            res.push(`highlight@${highlight}`)
-          }
-          api.squares = [...bases, ...res]
+          api.squares = [...bases, ...squares]
           })
 
       props.board.ref.$ref = $ref
 
-   })
+  })
 
   return (<div ref={$ref} class={['vboard-wrap', orientations[props.board.orientation]].join(' ')}></div>)
 }

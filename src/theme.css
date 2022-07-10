@@ -23,8 +23,17 @@ square.dark {
 }
 
 square.highlight {
-  background: yellow;
-  opacity: 0.5;
+  background: gray;
+  opacity: 0.6;
+}
+
+square.drag-destination {
+  background: radial-gradient(rgba(55,55,55,0.5) 33%, rgba(0,0,0,0) 33%);
+}
+
+square.drag-destination.highlight {
+  background: gray;
+  opacity: 0.8;
 }
 
 squares square {

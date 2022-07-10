@@ -67,7 +67,10 @@ function make_hooks(analysis: Analysis) {
         analysis.board.find_on_drag_start(vs)
       if (_piece) {
         if (analysis.drops.mode === 'move') {
-          analysis.hooks.on_user_out(_piece)
+          let ods = analysis.hooks.on_user_ods(_piece)
+          if (ods.length > 0) {
+            analysis.board.show_drag([_piece, ods])
+          }
         }
         analysis.drag_piece.begin(_piece, vs)
         return analysis.drag_piece
@@ -109,7 +112,7 @@ export class Analysis {
         if (prev) {
           let key = this.board.get_key_at_abs_pos(prev.target.vs)
           this.board.highlight = undefined
-            this.drag_piece.drop()
+          this.drag_piece.drop()
           if (key) {
             let { piece } = prev.target
             let immediate_drop = vs_key_piece_data(key, piece)
@@ -133,11 +136,37 @@ const make_board = (analysis: Analysis) => {
   let ref = make_ref()
 
   let _hi = createSignal()
-
-
   let _orientation = createSignal('w')
   let _pieses = createSignal([])
   let _instant_track = createSignal()
+
+  let _show_drag_info = createSignal()
+
+  let m_drag_ods = createMemo(() => read(_show_drag_info)?.[1])
+
+  let m_hi_drag_ods = createMemo(() =>
+      m_drag_ods()?.map(od => {
+        let d = od.slice(2)
+        let hi = read(_hi)
+        let on_hi = hi === d ? 'highlight ' : ''
+        return `${on_hi}drag-destination@${d}`
+      }))
+
+  let m_hi_drag = createMemo(() => {
+    if (m_drag_ods()) {
+      return undefined
+    }
+    let hi = read(_hi)
+    if (hi) {
+      return [`highlight@${hi}`]
+    }
+  })
+
+
+  let m_squares = createMemo(() => [
+    ...(m_hi_drag_ods() || []),
+    ...(m_hi_drag() || [])
+  ])
 
   createEffect(() => {
     read(_pieses)
@@ -147,6 +176,12 @@ const make_board = (analysis: Analysis) => {
 
   analysis.refs.push(ref)
   return {
+    get squares() {
+      return m_squares()
+    },
+    show_drag(info: IDragInfo) {
+      owrite(_show_drag_info, info)
+    },
     get instant_track() {
       return read(_instant_track)
     },
@@ -154,7 +189,7 @@ const make_board = (analysis: Analysis) => {
       let [idrop, vs] = drop
       let _v_pos = ref.get_normal_at_abs_pos(vs).scale(8).sub(Vec2.make(0.5, 0.5))
 
-      let v_pos = _v_pos.vs.join('-')
+      let v_pos = _v_pos.vs.join(';')
       let at = idrop.split('@')[1]
       let res = [at, v_pos].join('@')
 
@@ -201,9 +236,6 @@ const make_board = (analysis: Analysis) => {
         owrite(_hi, undefined)
       }
     },
-    get highlight() {
-      return read(_hi)
-    }
   }
 }
 
