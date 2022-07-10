@@ -168,21 +168,6 @@ const make_board = (analysis: Analysis) => {
 
     let drag_piese = m_drag_piese()
     pieses = pieses.filter(piese => piese !== drag_piese)
-
-    /*
-    let i_track = read(_instant_track)
-
-    if (i_track) {
-
-      let [at] = i_track.split('@')
-
-      let i = pieses.findIndex(_ => _.split('@')[1] === at)
-
-      let [p] = pieses.splice(i, 1)
-      pieses.push(p)
-    }
-   */
-
     return pieses
   })
 
@@ -192,6 +177,15 @@ const make_board = (analysis: Analysis) => {
     ...(m_hi_drag() || [])
   ])
 
+  createEffect(on(_instant_track[0], (v) => {
+
+    if (v) {
+
+      setTimeout(() => {
+        owrite(_instant_track, undefined)
+      }, 100)
+    }
+  }))
 
   analysis.refs.push(ref)
   return {
