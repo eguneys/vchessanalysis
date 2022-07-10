@@ -68,9 +68,7 @@ function make_hooks(analysis: Analysis) {
       if (_piece) {
         if (analysis.drops.mode === 'move') {
           let ods = analysis.hooks.on_user_ods(_piece)
-          if (ods.length > 0) {
-            analysis.board.show_drag([_piece, ods])
-          }
+          analysis.board.show_drag([_piece, ods])
         }
         analysis.drag_piece.begin(_piece, vs)
         return analysis.drag_piece
@@ -113,11 +111,11 @@ export class Analysis {
           let key = this.board.get_key_at_abs_pos(prev.target.vs)
           this.board.highlight = undefined
           this.drag_piece.drop()
-          if (key) {
-            let { piece } = prev.target
-            let immediate_drop = vs_key_piece_data(key, piece)
-            this.board.immediate_drop = [immediate_drop, prev.target.vs]
-            hooks.on_user_in(immediate_drop)
+          let { piece } = prev.target
+          if (this.drops.mode === 'move') {
+            this.board.drop_move_at(key, piece, prev.target.vs)
+          } else {
+            this.board.drop_copy_at(key, piece, prev.target.vs)
           }
         }
         this.drops.pieces.forEach(_ => _.mouse_down = false)
@@ -142,6 +140,8 @@ const make_board = (analysis: Analysis) => {
 
   let _show_drag_info = createSignal()
 
+  let m_drag_piese = createMemo(() => read(_show_drag_info)?.[0])
+
   let m_drag_ods = createMemo(() => read(_show_drag_info)?.[1])
 
   let m_hi_drag_ods = createMemo(() =>
@@ -162,20 +162,59 @@ const make_board = (analysis: Analysis) => {
     }
   })
 
+  let m_pieses = createMemo(() => {
+    let pieses = read(_pieses)
+
+    let drag_piese = m_drag_piese()
+    pieses = pieses.filter(piese => piese !== drag_piese)
+
+    /*
+    let i_track = read(_instant_track)
+
+    if (i_track) {
+
+      let [at] = i_track.split('@')
+
+      let i = pieses.findIndex(_ => _.split('@')[1] === at)
+
+      let [p] = pieses.splice(i, 1)
+      pieses.push(p)
+    }
+   */
+
+    return pieses
+  })
+
 
   let m_squares = createMemo(() => [
     ...(m_hi_drag_ods() || []),
     ...(m_hi_drag() || [])
   ])
 
-  createEffect(() => {
-    read(_pieses)
-    owrite(_instant_track, undefined)
-
-  })
 
   analysis.refs.push(ref)
   return {
+    drop_copy_at(key: Pos, piece: Piece, vs: Vec2) {
+
+      if (key) {
+        let d = vs_chess_pos(key)
+        this.immediate_drop = [d, vs]
+        analysis.hooks.on_user_in([piece, d].join('@'))
+      }
+    },
+    drop_move_at(key: Pos, piece: Piece, vs: Vec2) {
+
+      let o = m_drag_piese().split('@')[1]
+      let d = vs_chess_pos(key)
+
+      if (key && analysis.hooks.can_user_od(o+d)) {
+        this.immediate_drop = [d, vs]
+        analysis.hooks.on_user_od(o+d)
+      } else {
+        this.immediate_drop = [o, vs]
+      }
+      this.show_drag(undefined)
+    },
     get squares() {
       return m_squares()
     },
@@ -186,13 +225,10 @@ const make_board = (analysis: Analysis) => {
       return read(_instant_track)
     },
     set immediate_drop(drop: IDrop) {
-      let [idrop, vs] = drop
+      let [at, vs] = drop
       let _v_pos = ref.get_normal_at_abs_pos(vs).scale(8).sub(Vec2.make(0.5, 0.5))
-
       let v_pos = _v_pos.vs.join(';')
-      let at = idrop.split('@')[1]
       let res = [at, v_pos].join('@')
-
       owrite(_instant_track, res)
     },
     find_on_drag_start(vs: Vec2) {
@@ -200,6 +236,7 @@ const make_board = (analysis: Analysis) => {
       if (key) {
         let pos = vs_chess_pos(key)
         if (pos) {
+          owrite(_instant_track, undefined)
           return read(_pieses).find(_ => piese_at(_, pos))
         }
       }
@@ -211,7 +248,7 @@ const make_board = (analysis: Analysis) => {
       owrite(_orientation, color)
     },
     get pieses() {
-      return read(_pieses)
+      return m_pieses()
     },
     set pieses(pieses: Array<Piese>) {
       owrite(_pieses, pieses)
