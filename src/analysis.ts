@@ -50,6 +50,7 @@ function make_hooks(analysis: Analysis) {
       if (key) {
         key = vs_chess_pos(key)
 
+        analysis.board.clear_instant_track()
         analysis.hooks.on_user_out(key)
       }
     },
@@ -199,7 +200,7 @@ const make_board = (analysis: Analysis) => {
       if (key) {
         let d = vs_chess_pos(key)
         this.immediate_drop = [d, vs]
-        analysis.hooks.on_user_in([piece, d].join('@'))
+        analysis.hooks.on_user_in([piece.split('@')[0], d].join('@'))
       }
     },
     drop_move_at(key: Pos, piece: Piece, vs: Vec2) {
@@ -230,6 +231,9 @@ const make_board = (analysis: Analysis) => {
       let v_pos = _v_pos.vs.join(';')
       let res = [at, v_pos].join('@')
       owrite(_instant_track, res)
+    },
+    clear_instant_track() {
+      owrite(_instant_track, undefined)
     },
     find_on_drag_start(vs: Vec2) {
       let key = this.get_key_at_abs_pos(vs)
