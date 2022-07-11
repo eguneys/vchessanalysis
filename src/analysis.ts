@@ -200,9 +200,9 @@ const make_board = (analysis: Analysis) => {
     drop_move_at(key: Pos, piece: Piece, vs: Vec2) {
 
       let o = m_drag_piese().split('@')[1]
-      let d = vs_chess_pos(key)
+      let d = key && vs_chess_pos(key)
 
-      if (key && analysis.hooks.can_user_od(o+d)) {
+      if (analysis.hooks.can_user_od(o+d)) {
         this.immediate_drop = [d, vs]
         analysis.hooks.on_user_od(o+d)
       } else {
